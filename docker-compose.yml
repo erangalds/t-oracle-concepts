@@ -1,0 +1,28 @@
+services:
+  oracle-db:
+    image: gvenzl/oracle-free:latest
+    container_name: oracle23ai
+    restart: unless-stopped
+    ports:
+      - "1521:1521"
+    environment:
+      # Master password for SYS and SYSTEM administrative accounts
+      - ORACLE_PASSWORD=Oracle123
+      # Name of the pluggable database
+      - ORACLE_DATABASE=FREEPDB1
+      # Optional: automatically provision an application developer user
+      - APP_USER=dev_user
+      - APP_USER_PASSWORD=Oracle123
+    volumes:
+      # Retains all database files across container rebuilds
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
+
+volumes:
+  oracle_data:
+    driver: local
