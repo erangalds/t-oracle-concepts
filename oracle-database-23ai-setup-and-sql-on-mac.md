@@ -22,8 +22,8 @@ A complete, hands-on workbook designed to take you from a blank terminal on macO
 Before writing queries, it helps to understand how Oracle differs from databases like PostgreSQL or MySQL:
 
 1. CDB vs. PDB (Multitenant Architecture):
-    + CDB (Container Database): The root database (e.g., FREE or CDB$ROOT). Used for system administration.
-    + PDB (Pluggable Database): An isolated database instance inside the CDB (default in Docker: FREEPDB1). Always create your tables and run application queries inside the PDB, never in CDB$ROOT.
+    + CDB (Container Database): The root database (e.g., `FREE` or `CDB$ROOT`). Used for system administration.
+    + PDB (Pluggable Database): An isolated database instance inside the CDB (default in Docker: `FREEPDB1`). Always create your tables and run application queries inside the PDB, never in `CDB$ROOT`.
 2. User = Schema:
     + In Oracle, a User and a Schema are the same thing. When you create a user named dev_user, an empty schema called dev_user is automatically created.
 3. Case Sensitivity:
@@ -56,12 +56,12 @@ services:
       - "1521:1521"
     environment:
       # Master password for SYS and SYSTEM administrative accounts
-      - ORACLE_PASSWORD=Oracle#123
+      - ORACLE_PASSWORD=Oracle123
       # Name of the pluggable database
       - ORACLE_DATABASE=FREEPDB1
       # Optional: automatically provision an application developer user
       - APP_USER=dev_user
-      - APP_USER_PASSWORD=DevPass2026#
+      - APP_USER_PASSWORD=Oracle123
     volumes:
       # Retains all database files across container rebuilds
       - oracle_data:/opt/oracle/oradata
@@ -94,7 +94,7 @@ docker compose logs -f oracle-db
 Wait until you see:
 `DATABASE IS READY TO USE!`
 
-Press `Ctrl + C`to exit log streaming.
+Press `Ctrl + C` to exit log streaming.
 
 ## 3. Connecting to Oracle Database
 
@@ -111,9 +111,9 @@ docker exec -it oracle23ai sqlplus system/Oracle#123@//localhost:1521/FREEPDB1
 ```bash
 docker exec -it oracle23ai sqlplus dev_user/DevPass2026#@//localhost:1521/FREEPDB1
 ```
-Basic SQL*Plus Navigation Commands:
+Basic **SQL*Plus** Navigation Commands:
 
-+ Exit SQL*Plus: exit; or quit;
++ Exit SQL*Plus: `exit`; or `quit`;
 
 + Clear formatting / set page width:
 
@@ -131,7 +131,7 @@ SELECT sys_context('USERENV', 'CON_NAME') AS current_container, USER FROM dual;
 ### Method B: VS Code Oracle Extension
 
 1. Open VS Code.
-2. Go to Extensions (Cmd + Shift + X) and search for:
+2. Go to Extensions (`Cmd + Shift + X`) and search for:
     + Oracle Developer Tools for VS Code (SQL and PL/SQL) by Oracle.
 3. Click Install.
 4. In the left activity bar, click the new Database / Oracle icon.
@@ -145,13 +145,13 @@ SELECT sys_context('USERENV', 'CON_NAME') AS current_container, USER FROM dual;
     + Type: `Service Name`
     + Service Name: `FREEPDB1`
 6. Click Test Connection. Once successful, click Save Connection.
-7. Open a new SQL file (practice.sql), right-click inside the editor, select Change Connection, and select your dev_user profile. Run queries using Ctrl + Enter or Cmd + Enter.
+7. Open a new SQL file (practice.sql), right-click inside the editor, select Change Connection, and select your `dev_user` profile. Run queries using `Ctrl + Enter` or `Cmd + Enter`.
 
 ## 4. Setting Up the Practice User and Schema
 If you ever need to manually recreate or configure permissions for a practice user, connect as SYSTEM:
 
 ```bash
-docker exec -it oracle23ai sqlplus system/Oracle#123@//localhost:1521/FREEPDB1
+docker exec -it oracle23ai sqlplus system/Oracle123@//localhost:1521/FREEPDB1
 ```
 
 Run the following administrative SQL statements:
@@ -161,7 +161,7 @@ Run the following administrative SQL statements:
 ALTER SESSION SET CONTAINER = FREEPDB1;
 
 -- Create the developer user (if not created via compose)
-CREATE USER dev_user IDENTIFIED BY "DevPass2026#";
+CREATE USER dev_user IDENTIFIED BY "Oracle123";
 
 -- Grant basic connection, resource management, and view creation permissions
 GRANT CONNECT, RESOURCE, CREATE VIEW, CREATE SEQUENCE TO dev_user;
@@ -175,7 +175,9 @@ EXIT;
 
 ## 5. E-Commerce Schema DDL & Seed Data
 
-Connect as dev_user in VS Code or SQL*Plus before executing the scripts below.
+Connect as `dev_user` in `dbeaver` or `SQL*Plus` before executing the scripts below. Open the script below. 
+
+Open the script `clean-existing-environment.sql` and run the entire script. This will delete if these tables are already in the schema. 
 
 ### 5.1 DDL (Table Definitions)-- Clean up previous tables if re-running
 
@@ -192,6 +194,9 @@ EXCEPTION
 END;
 /
 ```
+
+Next, we need to create the tables required for the lab. For that open the script, `create-tables.sql`. Run the entire script at once or else you can run one by one to see how it works. 
+
 
 ```sql
 -- 1. Departments Table
@@ -254,6 +259,8 @@ CREATE TABLE order_items (
 
 
 ### 5.2 DML (Sample Data)-- Departments
+
+Now we have created the tables, the next step is to load some data into those tables. You can run either run the entire script at once or run section by section. 
 
 ```sql
 INSERT INTO departments (department_name, location) VALUES ('Executive', 'San Francisco');
@@ -356,14 +363,16 @@ INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (4, 
 COMMIT;
 ```
 
+
 ## 6. SQL Practice Exercises & Complete Solutions
+
 Work through the questions first, then review the query and explanation provided below each problem.
 
 ### Part 1: Filtering, Sorting & Null Handling
 
 #### Exercise 1: Basic Filtering and Column Aliasing
 
-Task: Find the product name, unit price, and stock status for all products. If a product has a stock quantity of 0, show the status as 'Out of Stock', otherwise 'In Stock'. Sort by unit price descending.
+**Task:** Find the product name, unit price, and stock status for all products. If a product has a stock quantity of 0, show the status as 'Out of Stock', otherwise 'In Stock'. Sort by unit price descending.
 
 ```sql
 SELECT 
@@ -378,11 +387,11 @@ FROM products
 ORDER BY unit_price DESC;
 ```
 
-Explanation: Uses Oracle's standard CASE expression for conditional logic and aliases the result column as stock_status.
+**Explanation:** Uses Oracle's standard `CASE` expression for conditional logic and aliases the result column as `stock_status`.
 
 #### Exercise 2: Null Checks and String Substitution
 
-Task: List all customers. Show their full name (first and last name combined), email, and city. If the city is null, display 'Unknown Location'.
+**Task:** List all customers. Show their full name (first and last name combined), email, and city. If the city is null, display 'Unknown Location'.
 
 ```sql
 -- Option 1: Using NVL
@@ -402,11 +411,11 @@ FROM customers
 ORDER BY full_name;
 ```
 
-Explanation: `||` is Oracle's string concatenation operator.NVL(expr1, expr2) returns expr2 if expr1 is NULL. You can also use standard COALESCE(city, 'Unknown Location').
+**Explanation:** `||` is Oracle's string concatenation operator.`NVL(expr1, expr2)` returns `expr2` if `expr1` is `NULL`. You can also use standard `COALESCE(city, 'Unknown Location')`.
 
 #### Exercise 3: Pattern Matching and Salary Range
 
-Task: Find all employees whose last name contains the letter 'a' (case-insensitive) and whose salary is between $70,000 and $115,000.
+**Task:** Find all employees whose last name contains the letter 'a' (case-insensitive) and whose salary is between $70,000 and $115,000.
 
 ```sql
 SELECT 
@@ -420,12 +429,13 @@ WHERE LOWER(last_name) LIKE '%a%'
 ORDER BY salary DESC;
 ```
 
-Explanation: LOWER() normalizes the column to guarantee case-insensitive matching regardless of database collation settings.
+**Explanation:** `LOWER()` normalizes the column to guarantee case-insensitive matching regardless of database collation settings.
 
 #### Exercise 4: Oracle Pagination (Row Limiting)
-Task: Retrieve the top 3 highest-earning employees using Oracle's native FETCH FIRST syntax.
 
-```bash
+**Task:** Retrieve the top 3 highest-earning `employees` using Oracle's native `FETCH FIRST` syntax.
+
+```sql
 SELECT 
     first_name,
     last_name,
@@ -435,11 +445,11 @@ ORDER BY salary DESC
 FETCH FIRST 3 ROWS ONLY;
 ```
 
-Explanation: Oracle 12c+ supports the ANSI-standard OFFSET ... FETCH FIRST ... ROWS ONLY syntax, avoiding older nested ROWNUM subqueries.Part 2: Joins (Inner, Left, Self, Full Outer)
+**Explanation:** Oracle 12c+ supports the ANSI-standard `OFFSET` ... `FETCH FIRST` ... `ROWS ONLY` syntax, avoiding older nested `ROWNUM` subqueries.Part 2: Joins (Inner, Left, Self, Full Outer)
 
 #### Exercise 5: Multi-table Inner Join
 
-Task: Produce a breakdown of all orders showing: Order ID, Order Date, Customer Full Name, Product Name, Quantity Ordered, and Item Total (Quantity $\times$ Unit Price).
+**Task:** Produce a breakdown of all orders showing: Order ID, Order Date, Customer Full Name, Product Name, Quantity Ordered, and Item Total (Quantity $\times$ Unit Price).
 
 ```sql
 SELECT 
@@ -457,11 +467,11 @@ JOIN products p     ON oi.product_id = p.product_id
 ORDER BY o.order_id, item_total DESC;
 ```
 
-Explanation: Connects four tables: orders to customers via customer_id, to order_items via order_id, and to products via product_id.
+**Explanation:** Connects four tables: `orders` to `customers` via `customer_id`, to `order_items` via `order_id`, and to `products` via `product_id`.
 
 #### Exercise 6: Left Join to Find Inactive Entities
 
-Task: List all departments along with the total count of employees in each department. Departments with zero employees must still appear in the list with a count of 0.
+**Task:** List all departments along with the total count of employees in each department. Departments with zero employees must still appear in the list with a count of 0.
 
 ```sql
 SELECT 
@@ -473,11 +483,11 @@ GROUP BY d.department_id, d.department_name
 ORDER BY total_employees DESC;
 ```
 
-Explanation:A LEFT JOIN keeps all departments even if there is no match in employees.COUNT(e.employee_id) counts non-null employee IDs, accurately showing 0 for empty departments (using COUNT(*) would incorrectly return 1).
+**Explanation:** A LEFT JOIN keeps all departments even if there is no match in `employees`.`COUNT(e.employee_id)` counts non-null employee IDs, accurately showing 0 for empty departments (using `COUNT(*)` would incorrectly return 1).
 
 #### Exercise 7: Self Join (Employee Hierarchy)
 
-Task: Write a query displaying each employee's full name, their salary, and their direct manager's full name. If an employee has no manager, display 'No Manager'.
+**Task:** Write a query displaying each employee's full name, their `salary`, and their direct manager's full name. If an employee has no manager, display 'No Manager'.
 
 ```sql
 -- Option 1 : with CASE
@@ -502,11 +512,15 @@ LEFT JOIN employees mgr ON emp.manager_id = mgr.employee_id
 ORDER BY emp.salary DESC;
 ```
 
-Explanation: Joins the employees table back onto itself. An outer join ensures top-level executives (where manager_id IS NULL) are not excluded.
+**Explanation:** Joins the employees table back onto itself. An outer join ensures top-level executives (where `manager_id IS NULL`) are not excluded.
 
 #### Exercise 8: Full Outer Join
 
-Task: Retrieve all departments and all employees, ensuring you see:Employees assigned to departments.Employees with no department.Departments with no employees.
+**Task:** Retrieve all departments and all employees, ensuring you see:
+
++ Employees assigned to departments.
++ Employees with no department.
++ Departments with no employees.
 
 ```sql
 SELECT 
@@ -517,14 +531,14 @@ FULL OUTER JOIN employees e ON d.department_id = e.department_id
 ORDER BY department, employee_name;
 ```
 
-Explanation: A FULL OUTER JOIN preserves unmatched rows from both sides of the join condition.
+**Explanation:** A `FULL OUTER JOIN` preserves unmatched rows from both sides of the join condition.
 
 ### Part 3: Aggregations & Grouping
 
 
 #### Exercise 9: Department Salary Statistics
 
-Task: For each department, calculate the number of employees, the average salary (rounded to 2 decimal places), the minimum salary, and the maximum salary. Include only departments with at least 1 employee.
+**Task:** For each department, calculate the number of employees, the average `salary` (rounded to 2 decimal places), the minimum `salary`, and the maximum `salary`. Include only departments with at least 1 employee.
 
 ```sql
 SELECT 
@@ -541,7 +555,7 @@ ORDER BY avg_salary DESC;
 
 #### Exercise 10: Filtering Aggregates with HAVING
 
-Task: Find the categories of products that have an average unit price greater than $100 and contain at least 2 distinct products in inventory.
+**Task:** Find the categories of products that have an average unit price greater than $100 and contain at least 2 distinct products in inventory.
 
 ```sql
 SELECT 
@@ -554,11 +568,11 @@ HAVING AVG(unit_price) > 100
    AND COUNT(product_id) >= 2;
 ```
 
-Explanation: WHERE filters individual rows before grouping; HAVING filters aggregated buckets after the GROUP BY calculation.
+**Explanation:** `WHERE` filters individual rows before grouping; `HAVING` filters aggregated buckets after the `GROUP BY` calculation.
 
 #### Exercise 11: Total Revenue per Customer
 
-Task: Calculate the total amount spent across all completed or active orders (DELIVERED, SHIPPED, or PENDING) by each customer. Include customers who haven't placed any orders yet (showing $0.00 spent).
+**Task:** Calculate the total amount spent across all completed or active orders (DELIVERED, SHIPPED, or PENDING) by each customer. Include customers who haven't placed any orders yet (showing $0.00 spent).
 
 ```sql
 SELECT 
@@ -572,9 +586,11 @@ GROUP BY c.customer_id, c.first_name, c.last_name
 ORDER BY total_spent DESC;
 ```
 
-Explanation: Successive LEFT JOINs preserve customers who have no orders or order items. NVL(..., 0) handles null sums.
+**Explanation:** Successive `LEFT JOIN`s preserve customers who have no orders or order items. `NVL(..., 0)` handles `null` sums.
 
-#### Exercise 12: Sales Representative PerformanceTask: Show each sales representative's full name and the total dollar value of the orders they managed.
+#### Exercise 12: Sales Representative Performance
+
+**Task:** Show each sales representative's full name and the total dollar value of the orders they managed.
 
 ```sql
 SELECT 
@@ -592,7 +608,7 @@ ORDER BY total_sales_volume DESC;
 
 #### Exercise 13: Scalar Subquery in WHERE Clause
 
-Task: Find all employees whose salary is strictly greater than the average salary of the entire company.
+**Task:** Find all employees whose salary is strictly greater than the average salary of the entire company.
 
 ```sql
 SELECT 
@@ -609,7 +625,7 @@ ORDER BY salary DESC;
 
 #### Exercise 14: Correlated Subquery
 
-Task: Find all employees who earn more than the average salary of their specific department.
+**Task:** Find all employees who earn more than the average salary of their specific department.
 
 ```sql
 SELECT 
@@ -626,9 +642,11 @@ WHERE e.salary > (
 ORDER BY e.department_id, e.salary DESC;
 ```
 
-Explanation: The inner query references e.department_id from the outer row. The database executes the subquery dynamically for each candidate row in employees.
+**Explanation:** The inner query references e.department_id from the outer row. The database executes the subquery dynamically for each candidate row in employees.
 
-#### Exercise 15: Subquery with NOT EXISTSTask: Find all customers who have never placed an order.
+#### Exercise 15: Subquery with NOT EXISTS
+
+**Task:** Find all customers who have never placed an order.
 
 ```sql
 SELECT 
@@ -644,9 +662,14 @@ WHERE NOT EXISTS (
 );
 ```
 
-Explanation: NOT EXISTS is null-safe and generally more performant than NOT IN (SELECT customer_id FROM orders) when customer_id contains or allows nulls.Exercise 16: Common Table Expressions (CTE / WITH Clause)Task: Using a CTE, calculate the total spending per order, then retrieve only the orders whose total value is greater than $500.
+**Explanation:** `NOT EXISTS` is null-safe and generally more performant than `NOT IN (SELECT customer_id FROM orders)` when customer_id contains or allows nulls.
+
+#### Exercise 16: Common Table Expressions (CTE / WITH Clause)
+
+**Task:** Using a `CTE`, calculate the total spending per order, then retrieve only the orders whose total value is greater than $500.
 
 ```sql
+-- First Creating the Temporary Virtual Table as a CTE
 WITH order_totals AS (
     SELECT 
         o.order_id,
@@ -657,6 +680,7 @@ WITH order_totals AS (
     JOIN order_items oi ON o.order_id = oi.order_id
     GROUP BY o.order_id, o.customer_id, o.order_date
 )
+-- Then Using that in the later SELECT Query
 SELECT 
     ot.order_id,
     c.first_name || ' ' || c.last_name AS customer_name,
@@ -668,12 +692,14 @@ WHERE ot.total_value > 500
 ORDER BY ot.total_value DESC;
 ```
 
-Explanation: CTEs make complex queries modular, reusable, and readable by establishing temporary named result sets.
+**Explanation:** `CTE`s make complex queries modular, reusable, and readable by establishing temporary named result sets.
+
+
 ### Part 5: DML Operations
 
 #### Exercise 17: Insert with Subquery
 
-Task: Create a table called high_earners (with columns emp_id, full_name, salary) and populate it directly with employees earning more than $90,000 using an INSERT INTO ... SELECT statement.
+**Task:** Create a table called `high_earners` (with columns `emp_id,` `full_name`, `salary`) and populate it directly with `employees` earning more than $90,000 using an `INSERT INTO ... SELECT` statement.
 
 ```sql
 CREATE TABLE high_earners (
@@ -712,7 +738,7 @@ WHERE department_id = (SELECT department_id FROM departments WHERE department_na
 
 #### Exercise 19: The Oracle MERGE Statement (Upsert)
 
-Task: Write an Oracle MERGE statement to update the product inventory. If the product 'Mechanical Keyboard' exists, increase its stock by 10. If it does not exist, insert it with price $129.99 and stock 10.
+**Task:** Write an Oracle `MERGE` statement to update the product inventory. If the product 'Mechanical Keyboard' exists, increase its stock by 10. If it does not exist, insert it with price $129.99 and stock 10.
 
 ```sql
 MERGE INTO products target
@@ -736,4 +762,4 @@ COMMIT;
 SELECT product_name, stock_quantity FROM products WHERE product_name = 'Mechanical Keyboard';
 ```
 
-Explanation: The MERGE statement is Oracle's native UPSERT mechanism. It cleanly executes conditional inserts or updates in a single atomic transaction.
+**Explanation:** The `MERGE` statement is Oracle's native `UPSERT` mechanism. It cleanly executes conditional inserts or updates in a single atomic transaction.
