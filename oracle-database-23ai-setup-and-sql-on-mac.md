@@ -36,7 +36,7 @@ Before writing queries, it helps to understand how Oracle differs from databases
 + macOS: Apple Silicon (M1/M2/M3/M4) or Intel.
 + Docker Desktop: Installed and running with at least 4 GB of RAM allocated (Docker Desktop -> Settings -> Resources -> Memory: 4 GB+).
 
-### Step 2.2: Create Project Directory & Compose File
+### Step 2.2: Create Project Directory & Compose File 
 
 Create a new directory on your Mac and navigate into it:
 
